@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Product Management with QR Scanner - Android Fixed</title>
+    <title>Product Management with QR Scanner - Enhanced</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -32,6 +32,37 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }
+        
+        /* Navigation Buttons */
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .nav-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .nav-btn.active {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            transform: translateY(-2px);
         }
         
         .form-section {
@@ -95,13 +126,17 @@
             border-radius: 15px;
             padding: 25px;
             margin-bottom: 30px;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 500px; /* Ensure enough space for centering */
         }
         
         .scanner-container {
             position: relative;
             max-width: 400px;
-            margin: 0 auto 20px auto;
+            margin: 20px auto;
         }
         
         #scanner-video {
@@ -149,6 +184,7 @@
             background: #f0f8ff;
             border: 2px dashed #2196F3;
             border-radius: 15px;
+            text-align: center;
         }
         
         .scanned-result {
@@ -158,6 +194,9 @@
             border: 2px solid #4caf50;
             border-radius: 10px;
             display: none;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
         }
         
         .error-message {
@@ -168,6 +207,9 @@
             border-radius: 10px;
             color: #d32f2f;
             display: none;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
         }
         
         .stats {
@@ -362,13 +404,17 @@
                 flex-direction: column;
             }
             
-            .storage-actions, .scanner-controls {
+            .storage-actions, .scanner-controls, .nav-buttons {
                 flex-direction: column;
             }
             
             input[type="text"], input[type="number"], input[type="file"] {
                 min-width: unset;
                 width: 100%;
+            }
+            
+            .scanner-section {
+                min-height: auto; /* Adjust for mobile */
             }
         }
     </style>
@@ -378,23 +424,30 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
 </head>
 <body>
+    <!-- Navigation Buttons -->
+    <div class="nav-buttons">
+        <button class="nav-btn active" onclick="showSection('scanner')">Scanner</button>
+        <button class="nav-btn" onclick="showSection('add-product')">Add Product</button>
+        <button class="nav-btn" onclick="showSection('product-list')">Product List</button>
+    </div>
+
     <div class="container">
-        <h1>🏷️ Product Management & QR Scanner</h1>
+        <h1>Product Management & QR Scanner</h1>
         
-        <!-- Storage Info -->
+        <!-- Storage Info (Always Visible) -->
         <div class="storage-info">
-            💾 <strong>Persistent Storage:</strong> Products are automatically saved and will persist even after refresh/restart!
+            <strong>Persistent Storage:</strong> Products are automatically saved and will persist even after refresh/restart!
             <div class="storage-actions">
-                <button class="export-btn" onclick="exportData()">📥 Export Data</button>
-                <button class="import-btn" onclick="importData()">📤 Import Data</button>
-                <button class="clear-btn" onclick="clearAllData()">🗑️ Clear All Data</button>
+                <button class="export-btn" onclick="exportData()">Export Data</button>
+                <button class="import-btn" onclick="importData()">Import Data</button>
+                <button class="clear-btn" onclick="clearAllData()">Clear All Data</button>
             </div>
         </div>
         
         <!-- QR Code Scanner Section -->
-        <div class="scanner-section">
-            <h2>📱 QR Code Scanner</h2>
-            <p>Scan QR codes to quickly find product information</p>
+        <div id="scanner-section" class="scanner-section">
+            <h2>QR Code Scanner</h2>
+            <p>Scan a QR code to view product details</p>
             
             <div class="scanner-container">
                 <video id="scanner-video" class="hidden" autoplay playsinline></video>
@@ -403,65 +456,80 @@
             </div>
             
             <div class="scanner-controls">
-                <button id="start-scanner-btn" class="scan-btn" onclick="startScanner()">📸 Start Camera Scanner</button>
-                <button id="stop-scanner-btn" class="stop-scan-btn hidden" onclick="stopScanner()">⏹️ Stop Scanner</button>
+                <button id="start-scanner-btn" class="scan-btn" onclick="startScanner()">Start Camera Scanner</button>
+                <button id="stop-scanner-btn" class="stop-scan-btn hidden" onclick="stopScanner()">Stop Scanner</button>
             </div>
             
             <!-- File upload for QR images -->
             <div class="file-upload-section">
-                <h3>📁 Or Upload QR Image</h3>
+                <h3>Or Upload QR Image</h3>
                 <p>Select a QR code image from your device:</p>
                 <input type="file" id="qr-file-input" accept="image/*" />
             </div>
             
+            <!-- Scanned Result -->
             <div id="scanned-result" class="scanned-result">
-                <h3>📦 Scanned Product Found!</h3>
+                <h3>Scanned Product Found! <button onclick="this.parentElement.parentElement.style.display='none'" style="float: right; background: none; border: none; color: #f44336; cursor: pointer; font-size: 16px;">✖</button></h3>
                 <div id="scanned-product-info"></div>
             </div>
             
             <div id="error-message" class="error-message">
-                <strong>❌ Scanner Error</strong>
+                <strong>Scanner Error</strong>
                 <div id="error-details"></div>
             </div>
         </div>
         
         <!-- Add Product Form -->
-        <div class="form-section">
+        <div id="add-product-section" class="form-section hidden">
             <h2>Add New Product</h2>
             <form id="productForm">
                 <div class="form-group">
                     <input type="text" id="productName" placeholder="Product Name" required />
                     <input type="text" id="productID" placeholder="Product ID" required />
                     <input type="number" id="productPrice" placeholder="Price (₱)" min="0" step="0.01" required />
-                    <button type="submit">➕ Add Product</button>
+                    <button type="submit">Add Product</button>
                 </div>
             </form>
-        </div>
-        
-        <!-- Statistics -->
-        <div class="stats">
-            <div class="stat-card">
-                <div class="stat-number" id="totalProducts">0</div>
-                <div>Total Products</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalQRCodes">0</div>
-                <div>QR Codes Generated</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="totalValue">₱0</div>
-                <div>Total Inventory Value</div>
+            <!-- Statistics for Add Product View -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProductsAdd">0</div>
+                    <div>Total Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalQRCodesAdd">0</div>
+                    <div>QR Codes Generated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalValueAdd">₱0</div>
+                    <div>Total Inventory Value</div>
+                </div>
             </div>
         </div>
         
         <!-- Product List -->
-        <div id="productListContainer">
-            <h2>📦 Product Inventory</h2>
+        <div id="product-list-section" class="hidden">
+            <h2>Product Inventory</h2>
+            <!-- Statistics for Product List View -->
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalProductsList">0</div>
+                    <div>Total Products</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalQRCodesList">0</div>
+                    <div>QR Codes Generated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalValueList">₱0</div>
+                    <div>Total Inventory Value</div>
+                </div>
+            </div>
             <div id="productList">
                 <div class="empty-state">
                     <div class="empty-state-icon">📦</div>
                     <h3>No products yet</h3>
-                    <p>Add your first product using the form above!</p>
+                    <p>Add your first product using the form in the Add Product section!</p>
                 </div>
             </div>
         </div>
@@ -471,63 +539,91 @@
         // GLOBAL VARIABLES
         let products = [];
         let productCounter = 0;
-        let productListDiv, totalProductsElement, totalQRCodesElement, totalValueElement;
+        let productListDiv, totalProductsAdd, totalQRCodesAdd, totalValueAdd, totalProductsList, totalQRCodesList, totalValueList;
         let scannerVideo = null;
         let scannerCanvas = null;
         let canvasContext = null;
         let scanInterval = null;
         let isScanning = false;
+        let currentSection = 'scanner'; // Track current view
+        
+        // NAVIGATION FUNCTION
+        function showSection(section) {
+            console.log('Switching to section:', section);
+            
+            const scannerSection = document.getElementById('scanner-section');
+            const addProductSection = document.getElementById('add-product-section');
+            const productListSection = document.getElementById('product-list-section');
+            const navButtons = document.querySelectorAll('.nav-btn');
+            
+            scannerSection.classList.add('hidden');
+            addProductSection.classList.add('hidden');
+            productListSection.classList.add('hidden');
+            navButtons.forEach(btn => btn.classList.remove('active'));
+            
+            if (section === 'scanner') {
+                scannerSection.classList.remove('hidden');
+                document.querySelector('.nav-btn[onclick="showSection(\'scanner\')"]').classList.add('active');
+            } else if (section === 'add-product') {
+                addProductSection.classList.remove('hidden');
+                document.querySelector('.nav-btn[onclick="showSection(\'add-product\')"]').classList.add('active');
+            } else if (section === 'product-list') {
+                productListSection.classList.remove('hidden');
+                document.querySelector('.nav-btn[onclick="showSection(\'product-list\')"]').classList.add('active');
+            }
+            
+            currentSection = section;
+            
+            if (section !== 'scanner' && isScanning) {
+                stopScanner();
+            }
+        }
         
         // STORAGE FUNCTIONS
-        function saveToLocalStorage() {
+        function saveToMemoryStorage() {
             try {
-                const dataToSave = {
+                window.productData = {
                     products: products,
                     counter: productCounter,
                     lastSaved: new Date().toISOString(),
                     version: '3.0'
                 };
-                localStorage.setItem('productManagementData', JSON.stringify(dataToSave));
-                console.log('✅ Data saved:', products.length, 'products');
+                console.log('Data saved:', products.length, 'products');
                 return true;
             } catch (error) {
-                console.error('❌ Save error:', error);
+                console.error('Save error:', error);
                 showNotification('Failed to save data!', 'error');
                 return false;
             }
         }
         
-        function loadFromLocalStorage() {
+        function loadFromMemoryStorage() {
             try {
-                const savedData = localStorage.getItem('productManagementData');
-                if (savedData) {
-                    const data = JSON.parse(savedData);
-                    if (data && data.products && Array.isArray(data.products)) {
-                        products = data.products;
-                        productCounter = data.counter || products.length;
-                        console.log('✅ Loaded:', products.length, 'products');
-                        return true;
-                    }
+                if (window.productData && window.productData.products && Array.isArray(window.productData.products)) {
+                    products = window.productData.products;
+                    productCounter = window.productData.counter || products.length;
+                    console.log('Loaded:', products.length, 'products');
+                    return true;
                 }
-                console.log('ℹ️ No saved data found');
+                console.log('No saved data found');
                 return false;
             } catch (error) {
-                console.error('❌ Load error:', error);
+                console.error('Load error:', error);
                 return false;
             }
         }
         
         function clearAllData() {
-            if (confirm('⚠️ Delete ALL products? This cannot be undone!')) {
+            if (confirm('Delete ALL products? This cannot be undone!')) {
                 try {
-                    localStorage.removeItem('productManagementData');
+                    window.productData = null;
                     products = [];
                     productCounter = 0;
                     updateProductList();
                     updateStats();
                     showNotification('All data cleared!');
                 } catch (error) {
-                    console.error('❌ Clear error:', error);
+                    console.error('Clear error:', error);
                     showNotification('Failed to clear data!', 'error');
                 }
             }
@@ -556,7 +652,7 @@
                 
                 showNotification('Data exported successfully!');
             } catch (error) {
-                console.error('❌ Export failed:', error);
+                console.error('Export failed:', error);
                 showNotification('Export failed!', 'error');
             }
         }
@@ -578,7 +674,7 @@
                                 if (confirm('Replace all current data?')) {
                                     products = importedData.products;
                                     productCounter = importedData.counter || products.length;
-                                    saveToLocalStorage();
+                                    saveToMemoryStorage();
                                     updateProductList();
                                     updateStats();
                                     showNotification('Data imported successfully!');
@@ -587,7 +683,7 @@
                                 throw new Error('Invalid file format');
                             }
                         } catch (error) {
-                            console.error('❌ Import failed:', error);
+                            console.error('Import failed:', error);
                             showNotification('Import failed! Invalid file format.', 'error');
                         }
                     };
@@ -602,7 +698,17 @@
         async function startScanner() {
             try {
                 hideError();
-                console.log('📸 Starting camera scanner...');
+                console.log('Starting camera scanner...');
+                
+                // Check for secure context (HTTPS or localhost)
+                if (!window.isSecureContext) {
+                    throw new Error('Camera access requires a secure context (HTTPS or localhost).');
+                }
+                
+                // Check if mediaDevices is supported
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Camera access is not supported by this browser or device.');
+                }
                 
                 scannerVideo = document.getElementById('scanner-video');
                 scannerCanvas = document.getElementById('scanner-canvas');
@@ -612,65 +718,78 @@
                 const stopBtn = document.getElementById('stop-scanner-btn');
                 const overlay = document.querySelector('.scanner-overlay');
                 
-                // Request camera access
+                // Simplified constraints for better compatibility
                 const constraints = {
                     video: {
-                        facingMode: { ideal: 'environment' }, // Prefer back camera
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
+                        facingMode: 'environment',
+                        width: { min: 640, ideal: 1280 },
+                        height: { min: 480, ideal: 720 }
                     }
                 };
                 
                 const stream = await navigator.mediaDevices.getUserMedia(constraints);
                 scannerVideo.srcObject = stream;
                 
-                // Wait for video to load
-                await new Promise((resolve) => {
+                await new Promise((resolve, reject) => {
                     scannerVideo.addEventListener('loadedmetadata', resolve, { once: true });
+                    scannerVideo.addEventListener('error', reject, { once: true });
                 });
                 
-                // Show UI elements
                 scannerVideo.classList.remove('hidden');
                 overlay.classList.remove('hidden');
                 startBtn.classList.add('hidden');
                 stopBtn.classList.remove('hidden');
                 
-                // Set canvas size
                 scannerCanvas.width = scannerVideo.videoWidth;
                 scannerCanvas.height = scannerVideo.videoHeight;
                 
-                // Start scanning
                 isScanning = true;
-                scanInterval = setInterval(scanForQR, 100);
+                scanInterval = setInterval(scanForQR, 300); // Increased to 300ms for stability
                 
                 showNotification('Scanner started! Point camera at QR code');
-                console.log('✅ Camera scanner started');
+                console.log('Camera scanner started');
                 
             } catch (error) {
-                console.error('❌ Scanner start error:', error);
-                showError('Camera Error', `Failed to start camera: ${error.message}. Try using file upload instead.`);
+                console.error('Scanner start error:', error);
+                let errorMessage = 'Failed to start camera. ';
+                if (error.name === 'NotAllowedError') {
+                    errorMessage += 'Please grant camera permissions and try again.';
+                } else if (error.name === 'NotFoundError') {
+                    errorMessage += 'No camera found on this device.';
+                } else if (error.message.includes('secure context')) {
+                    errorMessage += 'Please access this page via HTTPS or localhost.';
+                } else {
+                    errorMessage += 'An unexpected error occurred: ' + error.message;
+                }
+                errorMessage += ' Try using file upload instead.';
+                showError('Camera Error', errorMessage);
                 stopScanner();
+                
+                // Disable camera button if camera is unsupported
+                const startBtn = document.getElementById('start-scanner-btn');
+                if (startBtn && (error.name === 'NotFoundError' || !navigator.mediaDevices)) {
+                    startBtn.disabled = true;
+                    startBtn.textContent = 'Camera Not Available';
+                    startBtn.title = 'Camera access is not supported. Use file upload instead.';
+                }
             }
         }
         
         function stopScanner() {
-            console.log('⏹️ Stopping scanner...');
+            console.log('Stopping scanner...');
             
-            // Stop scanning interval
             if (scanInterval) {
                 clearInterval(scanInterval);
                 scanInterval = null;
             }
             isScanning = false;
             
-            // Stop video stream
             if (scannerVideo && scannerVideo.srcObject) {
                 const tracks = scannerVideo.srcObject.getTracks();
                 tracks.forEach(track => track.stop());
                 scannerVideo.srcObject = null;
             }
             
-            // Hide UI elements
             const scannerVideoEl = document.getElementById('scanner-video');
             const overlay = document.querySelector('.scanner-overlay');
             const startBtn = document.getElementById('start-scanner-btn');
@@ -681,37 +800,51 @@
             startBtn.classList.remove('hidden');
             stopBtn.classList.add('hidden');
             
-            // Update status
-            const statusDiv = document.getElementById('scanner-status');
-            if (statusDiv) {
-                statusDiv.innerHTML = '📱 Tap "Start Camera & Scan" to begin';
-                statusDiv.style.color = '#666';
-                statusDiv.style.fontWeight = 'normal';
-            }
-            
             hideError();
-            console.log('✅ Scanner stopped');
+            console.log('Scanner stopped');
         }
         
         function scanForQR() {
-            if (!isScanning || !scannerVideo || !canvasContext) return;
+            if (!isScanning || !scannerVideo || !canvasContext || !scannerVideo.videoWidth || !scannerVideo.videoHeight) {
+                console.warn('Scanner not ready:', {
+                    isScanning,
+                    hasVideo: !!scannerVideo,
+                    hasContext: !!canvasContext,
+                    videoDimensions: scannerVideo ? `${scannerVideo.videoWidth}x${scannerVideo.videoHeight}` : 'N/A'
+                });
+                showError('Scanner Error', 'Camera feed is not ready. Try restarting the scanner.');
+                stopScanner();
+                return;
+            }
             
             try {
-                // Draw video frame to canvas
                 canvasContext.drawImage(scannerVideo, 0, 0, scannerCanvas.width, scannerCanvas.height);
-                
-                // Get image data
                 const imageData = canvasContext.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
                 
-                // Scan for QR code
-                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                // Enhanced jsQR options for better detection
+                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                    inversionAttempts: 'attemptBoth', // Try both normal and inverted colors
+                    greyScaleWeights: {
+                        red: 0.299,
+                        green: 0.587,
+                        blue: 0.114,
+                        useIntegerApproximation: true
+                    }
+                });
                 
                 if (code) {
-                    console.log('🔍 QR Code detected:', code.data);
+                    console.log('QR Code detected:', code.data);
                     handleQRScan(code.data);
+                } else {
+                    console.debug('No QR code detected in current frame');
+                    // Show error only after repeated failures to avoid spamming
+                    if (!document.getElementById('error-message').style.display) {
+                        showError('Scan Error', 'No QR code detected. Ensure the QR code is clear, well-lit, and within the scan area.');
+                    }
                 }
             } catch (error) {
-                console.error('❌ Scan error:', error);
+                console.error('Scan error:', error);
+                showError('Scan Error', 'Failed to process QR code. Ensure the QR code is clear, well-lit, and properly positioned, or try uploading an image.');
             }
         }
         
@@ -719,14 +852,13 @@
             const file = event.target.files[0];
             if (!file) return;
             
-            console.log('📁 Processing uploaded image:', file.name);
+            console.log('Processing uploaded image:', file.name);
             
             const reader = new FileReader();
             reader.onload = function(e) {
                 const img = new Image();
                 img.onload = function() {
                     try {
-                        // Create temporary canvas
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
                         
@@ -734,70 +866,89 @@
                         canvas.height = img.height;
                         ctx.drawImage(img, 0, 0);
                         
-                        // Get image data and scan
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: 'attemptBoth'
+                        });
                         
                         if (code) {
-                            console.log('🔍 QR Code found in image:', code.data);
+                            console.log('QR Code found in image:', code.data);
                             handleQRScan(code.data);
                             showNotification('QR code successfully scanned from image!');
                         } else {
-                            showNotification('No QR code found in the selected image', 'error');
+                            showError('No QR Code', 'No QR code found in the selected image. Ensure the image contains a clear, valid QR code.');
                         }
                     } catch (error) {
-                        console.error('❌ Image processing error:', error);
-                        showNotification('Error processing image', 'error');
+                        console.error('Image processing error:', error);
+                        showError('Image Error', 'Error processing image. Ensure the image is clear and contains a valid QR code.');
                     }
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
             
-            // Clear file input
             event.target.value = '';
         }
         
         function handleQRScan(scannedData) {
-            console.log('🔍 Processing QR data:', scannedData);
+            console.log('Processing QR data:', scannedData);
             
             let productInfo = null;
             
-            // Try to parse QR code format: "Product: NAME\nID: ID"
-            const lines = scannedData.split('\n');
-            if (lines.length >= 2) {
-                const productName = lines[0].replace('Product: ', '').trim();
-                const productId = lines[1].replace('ID: ', '').trim();
-                
-                // Find matching product
-                productInfo = products.find(p => p.id === productId && p.name === productName);
+            // Try parsing structured QR code (Product: NAME\nID: ID\nPrice: ₱PRICE)
+            try {
+                const lines = scannedData.split('\n');
+                if (lines.length >= 2) {
+                    const productName = lines[0].startsWith('Product: ') ? lines[0].replace('Product: ', '').trim() : null;
+                    const productId = lines[1].startsWith('ID: ') ? lines[1].replace('ID: ', '').trim() : null;
+                    
+                    if (productName && productId) {
+                        productInfo = products.find(p => p.id === productId && p.name === productName);
+                    }
+                }
+            } catch (error) {
+                console.warn('Structured QR parsing failed:', error);
             }
             
-            // If not found, try to match by ID only
+            // Fallback: Try matching by ID only
             if (!productInfo) {
-                productInfo = products.find(p => p.id === scannedData || scannedData.includes(p.id));
+                productInfo = products.find(p => p.id === scannedData.trim() || scannedData.includes(p.id));
             }
             
-            // Display result
             const resultDiv = document.getElementById('scanned-result');
             const infoDiv = document.getElementById('scanned-product-info');
             
             if (productInfo) {
                 infoDiv.innerHTML = `
-                    <div style="text-align: left; margin-top: 15px;">
+                    <div style="text-align: center; margin-top: 15px;">
                         <div class="product-name">${escapeHtml(productInfo.name)}</div>
                         <div style="margin: 10px 0;">
                             <span class="product-id">ID: ${escapeHtml(productInfo.id)}</span>
                             <span class="product-price" style="margin-left: 10px;">₱${parseFloat(productInfo.price || 0).toFixed(2)}</span>
                         </div>
                         <small style="color: #999;">Added: ${productInfo.dateAdded}</small>
+                        <div style="margin-top: 15px;">
+                            <img src="https://via.placeholder.com/80" alt="Product Image" style="width: 80px; height: 80px; border-radius: 8px; margin: 10px auto;" />
+                            <button class="delete-btn" onclick="deleteProduct(${productInfo.index})">Delete Product</button>
+                        </div>
                     </div>
                 `;
+                resultDiv.style.display = 'block';
                 showNotification(`Found product: ${productInfo.name}!`);
+                
+                if (currentSection === 'product-list') {
+                    const productItems = document.querySelectorAll('.product-item');
+                    const targetItem = productItems[productInfo.index];
+                    if (targetItem) {
+                        targetItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetItem.style.background = '#e8f5e8';
+                        setTimeout(() => { targetItem.style.background = ''; }, 3000);
+                    }
+                }
             } else {
                 infoDiv.innerHTML = `
-                    <div style="text-align: left; margin-top: 15px; color: #f44336;">
-                        <strong>❌ Product not found</strong>
+                    <div style="text-align: center; margin-top: 15px; color: #f44336;">
+                        <strong>Product not found</strong>
                         <div style="margin-top: 10px; padding: 10px; background: #ffebee; border-radius: 8px;">
                             <strong>Scanned data:</strong><br>
                             <code style="word-break: break-all;">${escapeHtml(scannedData)}</code>
@@ -805,17 +956,10 @@
                         <p style="margin-top: 10px; color: #666;">This QR code doesn't match any products in your inventory.</p>
                     </div>
                 `;
-                showNotification('QR code scanned but no matching product found', 'error');
+                resultDiv.style.display = 'block';
+                showError('Product Not Found', 'The scanned QR code does not match any product in the inventory.');
             }
             
-            resultDiv.style.display = 'block';
-            
-            // Auto-hide result after 10 seconds
-            setTimeout(() => {
-                resultDiv.style.display = 'none';
-            }, 10000);
-            
-            // Stop scanner after successful scan
             if (isScanning) {
                 setTimeout(() => {
                     stopScanner();
@@ -827,7 +971,7 @@
             const errorDiv = document.getElementById('error-message');
             const detailsDiv = document.getElementById('error-details');
             
-            detailsDiv.innerHTML = `<p>${message}</p>`;
+            detailsDiv.innerHTML = `<p>${escapeHtml(message)}</p>`;
             errorDiv.style.display = 'block';
         }
         
@@ -838,7 +982,7 @@
         
         // UI FUNCTIONS
         function updateProductList() {
-            console.log('🔄 Updating product list:', products.length, 'products');
+            console.log('Updating product list:', products.length, 'products');
             productListDiv.innerHTML = '';
             
             if (products.length === 0) {
@@ -846,7 +990,7 @@
                     <div class="empty-state">
                         <div class="empty-state-icon">📦</div>
                         <h3>No products yet</h3>
-                        <p>Add your first product using the form above!</p>
+                        <p>Add your first product using the form in the Add Product section!</p>
                     </div>
                 `;
                 return;
@@ -887,7 +1031,6 @@
             qrLabel.textContent = 'QR Code';
             qrDiv.appendChild(qrLabel);
             
-            // Generate QR code with product info including price
             try {
                 const qrData = `Product: ${product.name}\nID: ${product.id}\nPrice: ₱${parseFloat(product.price || 0).toFixed(2)}`;
                 QRCode.toCanvas(canvas, qrData, { 
@@ -910,7 +1053,7 @@
             
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'delete-btn';
-            deleteBtn.textContent = '🗑️ Delete';
+            deleteBtn.textContent = 'Delete';
             deleteBtn.onclick = () => deleteProduct(index);
             
             actionsDiv.appendChild(qrDiv);
@@ -923,10 +1066,10 @@
         
         function deleteProduct(index) {
             if (confirm('Are you sure you want to delete this product?')) {
-                console.log('🗑️ Deleting product at index:', index);
+                console.log('Deleting product at index:', index);
                 const deletedProduct = products.splice(index, 1);
-                console.log('✅ Deleted product:', deletedProduct[0]?.name);
-                saveToLocalStorage();
+                console.log('Deleted product:', deletedProduct[0]?.name);
+                saveToMemoryStorage();
                 updateProductList();
                 updateStats();
                 showNotification('Product deleted successfully!');
@@ -937,11 +1080,21 @@
             const count = products.length;
             const totalValue = products.reduce((sum, product) => sum + parseFloat(product.price || 0), 0);
             
-            totalProductsElement.textContent = count;
-            totalQRCodesElement.textContent = count;
-            totalValueElement.textContent = `₱${totalValue.toFixed(2)}`;
+            // Update stats in Add Product view
+            if (totalProductsAdd && totalQRCodesAdd && totalValueAdd) {
+                totalProductsAdd.textContent = count;
+                totalQRCodesAdd.textContent = count;
+                totalValueAdd.textContent = `₱${totalValue.toFixed(2)}`;
+            }
             
-            console.log('📊 Stats updated - Products:', count, 'Total Value: ₱' + totalValue.toFixed(2));
+            // Update stats in Product List view
+            if (totalProductsList && totalQRCodesList && totalValueList) {
+                totalProductsList.textContent = count;
+                totalQRCodesList.textContent = count;
+                totalValueList.textContent = `₱${totalValue.toFixed(2)}`;
+            }
+            
+            console.log('Stats updated - Products:', count, 'Total Value: ₱' + totalValue.toFixed(2));
         }
         
         function showNotification(message, type = 'success') {
@@ -978,7 +1131,7 @@
             
             document.body.appendChild(notification);
             
-            const duration = type === 'error' ? 5000 : 3000; // Show errors longer
+            const duration = type === 'error' ? 5000 : 3000;
             setTimeout(() => {
                 notification.style.animation = 'slideOutRight 0.3s ease-out';
                 setTimeout(() => {
@@ -997,55 +1150,82 @@
         
         // INITIALIZATION
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 Product Management System with QR Scanner Loading...');
+            console.log('Product Management System with QR Scanner Loading...');
             
-            // Get DOM elements
             productListDiv = document.getElementById('productList');
-            totalProductsElement = document.getElementById('totalProducts');
-            totalQRCodesElement = document.getElementById('totalQRCodes');
-            totalValueElement = document.getElementById('totalValue');
+            totalProductsAdd = document.getElementById('totalProductsAdd');
+            totalQRCodesAdd = document.getElementById('totalQRCodesAdd');
+            totalValueAdd = document.getElementById('totalValueAdd');
+            totalProductsList = document.getElementById('totalProductsList');
+            totalQRCodesList = document.getElementById('totalQRCodesList');
+            totalValueList = document.getElementById('totalValueList');
             
-            if (!productListDiv || !totalProductsElement || !totalQRCodesElement || !totalValueElement) {
-                console.error('❌ Required DOM elements not found');
+            if (!productListDiv) {
+                console.error('Required DOM elements not found');
                 return;
             }
             
-            // Check for camera support
+            // Check for camera support during initialization
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                console.warn('⚠️ Camera not supported, file upload will be the only option');
+                console.warn('Camera not supported, file upload will be the only option');
                 const startBtn = document.getElementById('start-scanner-btn');
                 if (startBtn) {
                     startBtn.disabled = true;
-                    startBtn.textContent = '📸 Camera Not Supported';
+                    startBtn.textContent = 'Camera Not Supported';
                     startBtn.title = 'Your device/browser does not support camera access. Use file upload instead.';
                 }
             }
             
-            // Load saved data
-            const loadSuccess = loadFromLocalStorage();
-            if (loadSuccess) {
-                console.log('✅ Found saved data, displaying products...');
-                showNotification('Saved data loaded successfully!');
-            } else {
-                console.log('ℹ️ Starting with empty data');
+            // Check for secure context
+            if (!window.isSecureContext) {
+                console.warn('Page is not in a secure context, camera access may fail');
+                showNotification('Warning: This page must be served over HTTPS or localhost for camera access.', 'error');
+                const startBtn = document.getElementById('start-scanner-btn');
+                if (startBtn) {
+                    startBtn.disabled = true;
+                    startBtn.textContent = 'Secure Context Required';
+                    startBtn.title = 'Camera access requires HTTPS or localhost. Use file upload instead.';
+                }
             }
             
-            // Initialize UI
+            const loadSuccess = loadFromMemoryStorage();
+            if (loadSuccess) {
+                console.log('Found saved data, displaying products...');
+                showNotification('Saved data loaded successfully!');
+            } else {
+                console.log('Starting with empty data');
+                products = [
+                    {
+                        name: 'Sample Smartphone',
+                        id: 'DEMO001',
+                        price: '599.99',
+                        dateAdded: new Date().toLocaleString(),
+                        index: productCounter++
+                    },
+                    {
+                        name: 'Wireless Headphones',
+                        id: 'DEMO002',
+                        price: '199.99',
+                        dateAdded: new Date().toLocaleString(),
+                        index: productCounter++
+                    }
+                ];
+                saveToMemoryStorage();
+            }
+            
             updateProductList();
             updateStats();
             
-            console.log('📊 Initial status:', {
+            console.log('Initial status:', {
                 totalProducts: products.length,
                 productList: products.map(p => ({ name: p.name, price: p.price }))
             });
             
-            // File upload handler for QR images
             const fileInput = document.getElementById('qr-file-input');
             if (fileInput) {
                 fileInput.addEventListener('change', handleFileUpload);
             }
             
-            // Form submission handler
             document.getElementById('productForm').addEventListener('submit', function(e) {
                 e.preventDefault();
                 
@@ -1057,7 +1237,7 @@
                 const id = idInput.value.trim();
                 const price = parseFloat(priceInput.value) || 0;
                 
-                console.log('📝 Form submitted:', { name, id, price });
+                console.log('Form submitted:', { name, id, price });
                 
                 if (!name || !id) {
                     showNotification('Please fill in Product Name and Product ID!', 'error');
@@ -1070,14 +1250,12 @@
                     return;
                 }
                 
-                // Check for duplicate IDs
                 if (products.some(product => product.id === id)) {
                     showNotification('Product ID already exists! Please use a unique ID.', 'error');
                     idInput.focus();
                     return;
                 }
                 
-                // Create new product
                 const product = { 
                     name, 
                     id, 
@@ -1086,21 +1264,16 @@
                     index: productCounter++
                 };
                 
-                console.log('➕ Adding new product:', product);
+                console.log('Adding new product:', product);
                 
-                // Add to products array
                 products.push(product);
+                saveToMemoryStorage();
                 
-                // Save to localStorage
-                saveToLocalStorage();
+                console.log('Product added and saved. Total products now:', products.length);
                 
-                console.log('✅ Product added and saved. Total products now:', products.length);
-                
-                // Update UI
                 updateProductList();
                 updateStats();
                 
-                // Clear form
                 nameInput.value = '';
                 idInput.value = '';
                 priceInput.value = '';
@@ -1109,18 +1282,18 @@
                 showNotification(`Product "${name}" added successfully!`);
             });
             
-            console.log('✅ Product Management System with QR Scanner Ready!');
+            console.log('Product Management System with QR Scanner Ready!');
+            
+            showSection('scanner');
         });
         
-        // Cleanup scanner on page unload
         window.addEventListener('beforeunload', function() {
             stopScanner();
         });
         
-        // Handle page visibility change (mobile apps going to background)
         document.addEventListener('visibilitychange', function() {
             if (document.hidden && isScanning) {
-                console.log('⏸️ Page hidden, stopping scanner');
+                console.log('Page hidden, stopping scanner');
                 stopScanner();
             }
         });
