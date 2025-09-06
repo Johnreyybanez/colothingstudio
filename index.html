@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Product Management with QR Scanner - Android Fixed</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .form-section {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 2px solid #e1e8ff;
+        }
+        
+        .form-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        input[type="text"], input[type="number"], input[type="file"] {
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+        
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .scanner-section {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .scanner-container {
+            position: relative;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+        }
+        
+        #scanner-video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border-radius: 15px;
+            border: 3px solid #ff9800;
+            object-fit: cover;
+            background: #000;
+        }
+        
+        .scanner-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            border: 3px solid #ff5722;
+            border-radius: 10px;
+            pointer-events: none;
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+        }
+        
+        .scanner-controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .scan-btn {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+        
+        .stop-scan-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+        
+        .file-upload-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f0f8ff;
+            border: 2px dashed #2196F3;
+            border-radius: 15px;
+        }
+        
+        .scanned-result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .error-message {
+            margin-top: 15px;
+            padding: 15px;
+            background: #ffebee;
+            border: 2px solid #f44336;
+            border-radius: 10px;
+            color: #d32f2f;
+            display: none;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-card {
+            flex: 1;
+            min-width: 140px;
+            background: linear-gradient(135deg, #ff9a9e, #fecfef);
+            color: #333;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .product-item {
+            border: none;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #ffffff, #f8f9ff);
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        .product-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .product-info {
+            flex: 1;
+        }
+        
+        .product-name {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .product-id {
+            color: #666;
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        
+        .product-price {
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 1.2em;
+            background: #e8f5e8;
+            padding: 4px 12px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        
+        .qr-code {
+            margin-left: 20px;
+            text-align: center;
+        }
+        
+        .qr-code canvas {
+            border: 3px solid #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .qr-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .delete-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            padding: 8px 12px;
+            font-size: 14px;
+            margin-left: 10px;
+        }
+        
+        .delete-btn:hover {
+            background: linear-gradient(135deg, #ff5252, #d32f2f);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+        
+        .storage-info {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2e7d32;
+        }
+        
+        .storage-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .export-btn, .import-btn, .clear-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 8px;
+        }
+        
+        .export-btn {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+        }
+        
+        .import-btn {
+            background: linear-gradient(135deg, #FF9800, #F57C00);
+        }
+        
+        .clear-btn {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        @media (max-width: 768px) {
+            .form-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .product-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .qr-code {
+                margin: 20px 0 0 0;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .storage-actions, .scanner-controls {
+                flex-direction: column;
+            }
+            
+            input[type="text"], input[type="number"], input[type="file"] {
+                min-width: unset;
+                width: 100%;
+            }
+        }
+    </style>
+    <!-- QRCode.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.4.4/qrcode.min.js"></script>
+    <!-- jsQR library for QR scanning -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ Product Management & QR Scanner</h1>
+        
+        <!-- Storage Info -->
+        <div class="storage-info">
+            💾 <strong>Persistent Storage:</strong> Products are automatically saved and will persist even after refresh/restart!
+            <div class="storage-actions">
+                <button class="export-btn" onclick="exportData()">📥 Export Data</button>
+                <button class="import-btn" onclick="importData()">📤 Import Data</button>
+                <button class="clear-btn" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+        </div>
+        
+        <!-- QR Code Scanner Section -->
+        <div class="scanner-section">
+            <h2>📱 QR Code Scanner</h2>
+            <p>Scan QR codes to quickly find product information</p>
+            
+            <div class="scanner-container">
+                <video id="scanner-video" class="hidden" autoplay playsinline></video>
+                <canvas id="scanner-canvas" class="hidden"></canvas>
+                <div class="scanner-overlay hidden"></div>
+            </div>
+            
+            <div class="scanner-controls">
+                <button id="start-scanner-btn" class="scan-btn" onclick="startScanner()">📸 Start Camera Scanner</button>
+                <button id="stop-scanner-btn" class="stop-scan-btn hidden" onclick="stopScanner()">⏹️ Stop Scanner</button>
+            </div>
+            
+            <!-- File upload for QR images -->
+            <div class="file-upload-section">
+                <h3>📁 Or Upload QR Image</h3>
+                <p>Select a QR code image from your device:</p>
+                <input type="file" id="qr-file-input" accept="image/*" />
+            </div>
+            
+            <div id="scanned-result" class="scanned-result">
+                <h3>📦 Scanned Product Found!</h3>
+                <div id="scanned-product-info"></div>
+            </div>
+            
+            <div id="error-message" class="error-message">
+                <strong>❌ Scanner Error</strong>
+                <div id="error-details"></div>
+            </div>
+        </div>
+        
+        <!-- Add Product Form -->
+        <div class="form-section">
+            <h2>Add New Product</h2>
+            <form id="productForm">
+                <div class="form-group">
+                    <input type="text" id="productName" placeholder="Product Name" required />
+                    <input type="text" id="productID" placeholder="Product ID" required />
+                    <input type="number" id="productPrice" placeholder="Price (₱)" min="0" step="0.01" required />
+                    <button type="submit">➕ Add Product</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalProducts">0</div>
+                <div>Total Products</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalQRCodes">0</div>
+                <div>QR Codes Generated</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="totalValue">₱0</div>
+                <div>Total Inventory Value</div>
+            </div>
+        </div>
+        
+        <!-- Product List -->
+        <div id="productListContainer">
+            <h2>📦 Product Inventory</h2>
+            <div id="productList">
+                <div class="empty-state">
+                    <div class="empty-state-icon">📦</div>
+                    <h3>No products yet</h3>
+                    <p>Add your first product using the form above!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // GLOBAL VARIABLES
+        let products = [];
+        let productCounter = 0;
+        let productListDiv, totalProductsElement, totalQRCodesElement, totalValueElement;
+        let scannerVideo = null;
+        let scannerCanvas = null;
+        let canvasContext = null;
+        let scanInterval = null;
+        let isScanning = false;
+        
+        // STORAGE FUNCTIONS
+        function saveToLocalStorage() {
+            try {
+                const dataToSave = {
+                    products: products,
+                    counter: productCounter,
+                    lastSaved: new Date().toISOString(),
+                    version: '3.0'
+                };
+                localStorage.setItem('productManagementData', JSON.stringify(dataToSave));
+                console.log('✅ Data saved:', products.length, 'products');
+                return true;
+            } catch (error) {
+                console.error('❌ Save error:', error);
+                showNotification('Failed to save data!', 'error');
+                return false;
+            }
+        }
+        
+        function loadFromLocalStorage() {
+            try {
+                const savedData = localStorage.getItem('productManagementData');
+                if (savedData) {
+                    const data = JSON.parse(savedData);
+                    if (data && data.products && Array.isArray(data.products)) {
+                        products = data.products;
+                        productCounter = data.counter || products.length;
+                        console.log('✅ Loaded:', products.length, 'products');
+                        return true;
+                    }
+                }
+                console.log('ℹ️ No saved data found');
+                return false;
+            } catch (error) {
+                console.error('❌ Load error:', error);
+                return false;
+            }
+        }
+        
+        function clearAllData() {
+            if (confirm('⚠️ Delete ALL products? This cannot be undone!')) {
+                try {
+                    localStorage.removeItem('productManagementData');
+                    products = [];
+                    productCounter = 0;
+                    updateProductList();
+                    updateStats();
+                    showNotification('All data cleared!');
+                } catch (error) {
+                    console.error('❌ Clear error:', error);
+                    showNotification('Failed to clear data!', 'error');
+                }
+            }
+        }
+        
+        function exportData() {
+            try {
+                const dataToExport = {
+                    products: products,
+                    counter: productCounter,
+                    exportDate: new Date().toISOString(),
+                    version: '3.0'
+                };
+                
+                const dataStr = JSON.stringify(dataToExport, null, 2);
+                const dataBlob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(dataBlob);
+                
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `products_export_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                
+                showNotification('Data exported successfully!');
+            } catch (error) {
+                console.error('❌ Export failed:', error);
+                showNotification('Export failed!', 'error');
+            }
+        }
+        
+        function importData() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const importedData = JSON.parse(e.target.result);
+                            
+                            if (importedData && importedData.products && Array.isArray(importedData.products)) {
+                                if (confirm('Replace all current data?')) {
+                                    products = importedData.products;
+                                    productCounter = importedData.counter || products.length;
+                                    saveToLocalStorage();
+                                    updateProductList();
+                                    updateStats();
+                                    showNotification('Data imported successfully!');
+                                }
+                            } else {
+                                throw new Error('Invalid file format');
+                            }
+                        } catch (error) {
+                            console.error('❌ Import failed:', error);
+                            showNotification('Import failed! Invalid file format.', 'error');
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            
+            input.click();
+        }
+        
+        // QR SCANNER FUNCTIONS
+        async function startScanner() {
+            try {
+                hideError();
+                console.log('📸 Starting camera scanner...');
+                
+                scannerVideo = document.getElementById('scanner-video');
+                scannerCanvas = document.getElementById('scanner-canvas');
+                canvasContext = scannerCanvas.getContext('2d');
+                
+                const startBtn = document.getElementById('start-scanner-btn');
+                const stopBtn = document.getElementById('stop-scanner-btn');
+                const overlay = document.querySelector('.scanner-overlay');
+                
+                // Request camera access
+                const constraints = {
+                    video: {
+                        facingMode: { ideal: 'environment' }, // Prefer back camera
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                
+                const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                scannerVideo.srcObject = stream;
+                
+                // Wait for video to load
+                await new Promise((resolve) => {
+                    scannerVideo.addEventListener('loadedmetadata', resolve, { once: true });
+                });
+                
+                // Show UI elements
+                scannerVideo.classList.remove('hidden');
+                overlay.classList.remove('hidden');
+                startBtn.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+                
+                // Set canvas size
+                scannerCanvas.width = scannerVideo.videoWidth;
+                scannerCanvas.height = scannerVideo.videoHeight;
+                
+                // Start scanning
+                isScanning = true;
+                scanInterval = setInterval(scanForQR, 100);
+                
+                showNotification('Scanner started! Point camera at QR code');
+                console.log('✅ Camera scanner started');
+                
+            } catch (error) {
+                console.error('❌ Scanner start error:', error);
+                showError('Camera Error', `Failed to start camera: ${error.message}. Try using file upload instead.`);
+                stopScanner();
+            }
+        }
+        
+        function stopScanner() {
+            console.log('⏹️ Stopping scanner...');
+            
+            // Stop scanning interval
+            if (scanInterval) {
+                clearInterval(scanInterval);
+                scanInterval = null;
+            }
+            isScanning = false;
+            
+            // Stop video stream
+            if (scannerVideo && scannerVideo.srcObject) {
+                const tracks = scannerVideo.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                scannerVideo.srcObject = null;
+            }
+            
+            // Hide UI elements
+            const scannerVideoEl = document.getElementById('scanner-video');
+            const overlay = document.querySelector('.scanner-overlay');
+            const startBtn = document.getElementById('start-scanner-btn');
+            const stopBtn = document.getElementById('stop-scanner-btn');
+            
+            scannerVideoEl.classList.add('hidden');
+            overlay.classList.add('hidden');
+            startBtn.classList.remove('hidden');
+            stopBtn.classList.add('hidden');
+            
+            // Update status
+            const statusDiv = document.getElementById('scanner-status');
+            if (statusDiv) {
+                statusDiv.innerHTML = '📱 Tap "Start Camera & Scan" to begin';
+                statusDiv.style.color = '#666';
+                statusDiv.style.fontWeight = 'normal';
+            }
+            
+            hideError();
+            console.log('✅ Scanner stopped');
+        }
+        
+        function scanForQR() {
+            if (!isScanning || !scannerVideo || !canvasContext) return;
+            
+            try {
+                // Draw video frame to canvas
+                canvasContext.drawImage(scannerVideo, 0, 0, scannerCanvas.width, scannerCanvas.height);
+                
+                // Get image data
+                const imageData = canvasContext.getImageData(0, 0, scannerCanvas.width, scannerCanvas.height);
+                
+                // Scan for QR code
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                
+                if (code) {
+                    console.log('🔍 QR Code detected:', code.data);
+                    handleQRScan(code.data);
+                }
+            } catch (error) {
+                console.error('❌ Scan error:', error);
+            }
+        }
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            console.log('📁 Processing uploaded image:', file.name);
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    try {
+                        // Create temporary canvas
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        
+                        // Get image data and scan
+                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        
+                        if (code) {
+                            console.log('🔍 QR Code found in image:', code.data);
+                            handleQRScan(code.data);
+                            showNotification('QR code successfully scanned from image!');
+                        } else {
+                            showNotification('No QR code found in the selected image', 'error');
+                        }
+                    } catch (error) {
+                        console.error('❌ Image processing error:', error);
+                        showNotification('Error processing image', 'error');
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // Clear file input
+            event.target.value = '';
+        }
+        
+        function handleQRScan(scannedData) {
+            console.log('🔍 Processing QR data:', scannedData);
+            
+            let productInfo = null;
+            
+            // Try to parse QR code format: "Product: NAME\nID: ID"
+            const lines = scannedData.split('\n');
+            if (lines.length >= 2) {
+                const productName = lines[0].replace('Product: ', '').trim();
+                const productId = lines[1].replace('ID: ', '').trim();
+                
+                // Find matching product
+                productInfo = products.find(p => p.id === productId && p.name === productName);
+            }
+            
+            // If not found, try to match by ID only
+            if (!productInfo) {
+                productInfo = products.find(p => p.id === scannedData || scannedData.includes(p.id));
+            }
+            
+            // Display result
+            const resultDiv = document.getElementById('scanned-result');
+            const infoDiv = document.getElementById('scanned-product-info');
+            
+            if (productInfo) {
+                infoDiv.innerHTML = `
+                    <div style="text-align: left; margin-top: 15px;">
+                        <div class="product-name">${escapeHtml(productInfo.name)}</div>
+                        <div style="margin: 10px 0;">
+                            <span class="product-id">ID: ${escapeHtml(productInfo.id)}</span>
+                            <span class="product-price" style="margin-left: 10px;">₱${parseFloat(productInfo.price || 0).toFixed(2)}</span>
+                        </div>
+                        <small style="color: #999;">Added: ${productInfo.dateAdded}</small>
+                    </div>
+                `;
+                showNotification(`Found product: ${productInfo.name}!`);
+            } else {
+                infoDiv.innerHTML = `
+                    <div style="text-align: left; margin-top: 15px; color: #f44336;">
+                        <strong>❌ Product not found</strong>
+                        <div style="margin-top: 10px; padding: 10px; background: #ffebee; border-radius: 8px;">
+                            <strong>Scanned data:</strong><br>
+                            <code style="word-break: break-all;">${escapeHtml(scannedData)}</code>
+                        </div>
+                        <p style="margin-top: 10px; color: #666;">This QR code doesn't match any products in your inventory.</p>
+                    </div>
+                `;
+                showNotification('QR code scanned but no matching product found', 'error');
+            }
+            
+            resultDiv.style.display = 'block';
+            
+            // Auto-hide result after 10 seconds
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 10000);
+            
+            // Stop scanner after successful scan
+            if (isScanning) {
+                setTimeout(() => {
+                    stopScanner();
+                }, 2000);
+            }
+        }
+        
+        function showError(title, message) {
+            const errorDiv = document.getElementById('error-message');
+            const detailsDiv = document.getElementById('error-details');
+            
+            detailsDiv.innerHTML = `<p>${message}</p>`;
+            errorDiv.style.display = 'block';
+        }
+        
+        function hideError() {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.style.display = 'none';
+        }
+        
+        // UI FUNCTIONS
+        function updateProductList() {
+            console.log('🔄 Updating product list:', products.length, 'products');
+            productListDiv.innerHTML = '';
+            
+            if (products.length === 0) {
+                productListDiv.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📦</div>
+                        <h3>No products yet</h3>
+                        <p>Add your first product using the form above!</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            products.forEach((product, index) => {
+                addProductToUI(product, index);
+            });
+        }
+        
+        function addProductToUI(product, index) {
+            const div = document.createElement('div');
+            div.className = 'product-item';
+            
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'product-info';
+            infoDiv.innerHTML = `
+                <div class="product-name">${escapeHtml(product.name)}</div>
+                <div style="margin: 8px 0;">
+                    <span class="product-id">ID: ${escapeHtml(product.id)}</span>
+                    <span class="product-price">₱${parseFloat(product.price || 0).toFixed(2)}</span>
+                </div>
+                <small style="color: #999;">Added: ${product.dateAdded}</small>
+            `;
+            
+            const actionsDiv = document.createElement('div');
+            actionsDiv.style.display = 'flex';
+            actionsDiv.style.alignItems = 'center';
+            
+            const qrDiv = document.createElement('div');
+            qrDiv.className = 'qr-code';
+            
+            const canvas = document.createElement('canvas');
+            qrDiv.appendChild(canvas);
+            
+            const qrLabel = document.createElement('div');
+            qrLabel.className = 'qr-label';
+            qrLabel.textContent = 'QR Code';
+            qrDiv.appendChild(qrLabel);
+            
+            // Generate QR code with product info including price
+            try {
+                const qrData = `Product: ${product.name}\nID: ${product.id}\nPrice: ₱${parseFloat(product.price || 0).toFixed(2)}`;
+                QRCode.toCanvas(canvas, qrData, { 
+                    width: 120, 
+                    margin: 2,
+                    color: {
+                        dark: '#333333',
+                        light: '#FFFFFF'
+                    }
+                }, function(error) {
+                    if (error) {
+                        console.error('QR Code generation error:', error);
+                        qrLabel.textContent = 'QR Error';
+                    }
+                });
+            } catch (error) {
+                console.error('QR Code generation failed:', error);
+                qrLabel.textContent = 'QR Failed';
+            }
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.textContent = '🗑️ Delete';
+            deleteBtn.onclick = () => deleteProduct(index);
+            
+            actionsDiv.appendChild(qrDiv);
+            actionsDiv.appendChild(deleteBtn);
+            
+            div.appendChild(infoDiv);
+            div.appendChild(actionsDiv);
+            productListDiv.appendChild(div);
+        }
+        
+        function deleteProduct(index) {
+            if (confirm('Are you sure you want to delete this product?')) {
+                console.log('🗑️ Deleting product at index:', index);
+                const deletedProduct = products.splice(index, 1);
+                console.log('✅ Deleted product:', deletedProduct[0]?.name);
+                saveToLocalStorage();
+                updateProductList();
+                updateStats();
+                showNotification('Product deleted successfully!');
+            }
+        }
+        
+        function updateStats() {
+            const count = products.length;
+            const totalValue = products.reduce((sum, product) => sum + parseFloat(product.price || 0), 0);
+            
+            totalProductsElement.textContent = count;
+            totalQRCodesElement.textContent = count;
+            totalValueElement.textContent = `₱${totalValue.toFixed(2)}`;
+            
+            console.log('📊 Stats updated - Products:', count, 'Total Value: ₱' + totalValue.toFixed(2));
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            let bgColor;
+            
+            switch(type) {
+                case 'error':
+                    bgColor = 'linear-gradient(135deg, #f44336, #d32f2f)';
+                    break;
+                case 'info':
+                    bgColor = 'linear-gradient(135deg, #2196F3, #1976D2)';
+                    break;
+                default:
+                    bgColor = 'linear-gradient(135deg, #4CAF50, #45a049)';
+            }
+                
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${bgColor};
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideInRight 0.3s ease-out;
+                font-weight: 600;
+                max-width: 350px;
+                line-height: 1.4;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            const duration = type === 'error' ? 5000 : 3000; // Show errors longer
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-out';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, duration);
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Product Management System with QR Scanner Loading...');
+            
+            // Get DOM elements
+            productListDiv = document.getElementById('productList');
+            totalProductsElement = document.getElementById('totalProducts');
+            totalQRCodesElement = document.getElementById('totalQRCodes');
+            totalValueElement = document.getElementById('totalValue');
+            
+            if (!productListDiv || !totalProductsElement || !totalQRCodesElement || !totalValueElement) {
+                console.error('❌ Required DOM elements not found');
+                return;
+            }
+            
+            // Check for camera support
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                console.warn('⚠️ Camera not supported, file upload will be the only option');
+                const startBtn = document.getElementById('start-scanner-btn');
+                if (startBtn) {
+                    startBtn.disabled = true;
+                    startBtn.textContent = '📸 Camera Not Supported';
+                    startBtn.title = 'Your device/browser does not support camera access. Use file upload instead.';
+                }
+            }
+            
+            // Load saved data
+            const loadSuccess = loadFromLocalStorage();
+            if (loadSuccess) {
+                console.log('✅ Found saved data, displaying products...');
+                showNotification('Saved data loaded successfully!');
+            } else {
+                console.log('ℹ️ Starting with empty data');
+            }
+            
+            // Initialize UI
+            updateProductList();
+            updateStats();
+            
+            console.log('📊 Initial status:', {
+                totalProducts: products.length,
+                productList: products.map(p => ({ name: p.name, price: p.price }))
+            });
+            
+            // File upload handler for QR images
+            const fileInput = document.getElementById('qr-file-input');
+            if (fileInput) {
+                fileInput.addEventListener('change', handleFileUpload);
+            }
+            
+            // Form submission handler
+            document.getElementById('productForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const nameInput = document.getElementById('productName');
+                const idInput = document.getElementById('productID');
+                const priceInput = document.getElementById('productPrice');
+                
+                const name = nameInput.value.trim();
+                const id = idInput.value.trim();
+                const price = parseFloat(priceInput.value) || 0;
+                
+                console.log('📝 Form submitted:', { name, id, price });
+                
+                if (!name || !id) {
+                    showNotification('Please fill in Product Name and Product ID!', 'error');
+                    return;
+                }
+                
+                if (price < 0) {
+                    showNotification('Price cannot be negative!', 'error');
+                    priceInput.focus();
+                    return;
+                }
+                
+                // Check for duplicate IDs
+                if (products.some(product => product.id === id)) {
+                    showNotification('Product ID already exists! Please use a unique ID.', 'error');
+                    idInput.focus();
+                    return;
+                }
+                
+                // Create new product
+                const product = { 
+                    name, 
+                    id, 
+                    price: price.toFixed(2),
+                    dateAdded: new Date().toLocaleString(),
+                    index: productCounter++
+                };
+                
+                console.log('➕ Adding new product:', product);
+                
+                // Add to products array
+                products.push(product);
+                
+                // Save to localStorage
+                saveToLocalStorage();
+                
+                console.log('✅ Product added and saved. Total products now:', products.length);
+                
+                // Update UI
+                updateProductList();
+                updateStats();
+                
+                // Clear form
+                nameInput.value = '';
+                idInput.value = '';
+                priceInput.value = '';
+                nameInput.focus();
+                
+                showNotification(`Product "${name}" added successfully!`);
+            });
+            
+            console.log('✅ Product Management System with QR Scanner Ready!');
+        });
+        
+        // Cleanup scanner on page unload
+        window.addEventListener('beforeunload', function() {
+            stopScanner();
+        });
+        
+        // Handle page visibility change (mobile apps going to background)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && isScanning) {
+                console.log('⏸️ Page hidden, stopping scanner');
+                stopScanner();
+            }
+        });
+    </script>
+</body>
+</html>
